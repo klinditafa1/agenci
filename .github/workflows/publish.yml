@@ -1,10 +1,6 @@
 name: Publish to PyPI
 
-# Triggered by publishing a GitHub Release (tag format: vX.Y.Z).
-# Uses PyPI's Trusted Publishing (OIDC) — no long-lived API token
-# stored as a repository secret. Configure the trusted publisher once
-# at https://pypi.org/manage/project/agenci/settings/publishing/
-# (repository: agenci-dev/agenci, workflow: publish.yml, environment: pypi).
+
 on:
   release:
     types: [published]
