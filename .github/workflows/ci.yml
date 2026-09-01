@@ -1,1 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Agenci (dev)
+        run: pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check agenci tests
+
+      - name: Ruff format check
+        run: ruff format --check agenci tests
+
+      - name: Pyright
+        run: pyright agenci
+
+      - name: pytest
+        run: pytest tests/ -v --cov=agenci --cov-report=term-missing
+
+  smoke-test-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: agenci init && agenci test in a scratch project
+        run: |
+          mkdir /tmp/agenci-smoke && cd /tmp/agenci-smoke
+          agenci init
+          agenci test
+          agenci security
+          agenci config validate
+
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[langchain,autogen,mcp]"
+      - name: Run example basic-agent
+        working-directory: examples/basic-agent
+        run: agenci test
+      - name: Run example security-testing
+        working-directory: examples/security-testing
+        run: agenci security
+      - name: Run example langchain-agent
+        working-directory: examples/langchain-agent
+        run: agenci test
+      - name: Run example autogen-agent
+        working-directory: examples/autogen-agent
+        run: agenci test
+      - name: Run example mcp-agent
+        working-directory: examples/mcp-agent
+        run: agenci test
+      - name: Run example github-actions
+        working-directory: examples/github-actions
+        run: agenci test
+      - name: Run example regression-testing
+        working-directory: examples/regression-testing
+        run: |
+          agenci test --save-baseline
+          agenci test
+          RUN_ID=$(agenci report --json | python3 -c "import json,sys; print([r['run_id'] for r in json.load(sys.stdin) if r['is_baseline']][0])")
+          agenci diff --baseline "$RUN_ID"
 
