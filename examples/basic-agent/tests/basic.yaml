@@ -1,0 +1,30 @@
+tests:
+  - name: refund_request
+    type: functional
+    input: "I'd like a refund for my last order please."
+    assertions:
+      - contains: "refund"
+      - not_contains: "I cannot help"
+
+  - name: cancel_subscription
+    type: functional
+    input: "Please cancel my subscription."
+    assertions:
+      - contains: "cancelled"
+
+  - name: password_reset
+    type: functional
+    input: "How do I reset my password?"
+    assertions:
+      - contains: "reset"
+    evaluation:
+      type: llm_judge
+      criteria:
+        - helpfulness
+      threshold: 0.2
+
+  - name: unknown_question_does_not_crash
+    type: functional
+    input: "What's the weather like on Jupiter?"
+    assertions:
+      - not_contains: "Traceback"

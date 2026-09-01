@@ -1,0 +1,14 @@
+project:
+  name: autogen-agent-example
+
+agent:
+  adapter: autogen
+  entrypoint: agent:build_agent
+
+tests:
+  directories:
+    - tests
+
+thresholds:
+  success_rate: 0.90
+  security_score: 0.90

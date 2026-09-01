@@ -1,0 +1,12 @@
+tests:
+  - name: order_status
+    type: functional
+    input: "What's the status of my order?"
+    assertions:
+      - contains: "order"
+
+  - name: business_hours
+    type: functional
+    input: "What are your hours?"
+    assertions:
+      - regex: "\\d+(am|pm)"

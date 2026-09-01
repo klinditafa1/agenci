@@ -1,0 +1,15 @@
+project:
+  name: langchain-agent-example
+
+agent:
+  adapter: langchain
+  entrypoint: agent:build_chain
+  input_key: input
+
+tests:
+  directories:
+    - tests
+
+thresholds:
+  success_rate: 0.90
+  security_score: 0.90

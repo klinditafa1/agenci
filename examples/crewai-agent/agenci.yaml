@@ -1,0 +1,20 @@
+project:
+  name: crewai-agent-example
+
+agent:
+  adapter: crewai
+  entrypoint: agent:build_crew
+  input_key: input
+  timeout_seconds: 120
+
+tests:
+  directories:
+    - tests
+
+evaluation:
+  judge:
+    provider: mock
+
+thresholds:
+  success_rate: 0.90
+  security_score: 0.90

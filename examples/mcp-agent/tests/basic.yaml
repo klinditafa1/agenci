@@ -1,0 +1,12 @@
+tests:
+  - name: known_order
+    type: functional
+    input: '{"order_id": "1001"}'
+    assertions:
+      - contains: "shipped"
+
+  - name: unknown_order
+    type: functional
+    input: '{"order_id": "9999"}'
+    assertions:
+      - contains: "unknown order"

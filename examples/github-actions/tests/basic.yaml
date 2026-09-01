@@ -1,0 +1,6 @@
+tests:
+  - name: acknowledges_message
+    type: functional
+    input: "Hello, I need help."
+    assertions:
+      - not_contains: "I cannot help"

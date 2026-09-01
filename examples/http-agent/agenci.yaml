@@ -1,0 +1,15 @@
+project:
+  name: http-agent-example
+
+agent:
+  adapter: http
+  url: http://127.0.0.1:8800
+  timeout_seconds: 10
+
+tests:
+  directories:
+    - tests
+
+thresholds:
+  success_rate: 0.90
+  security_score: 0.90

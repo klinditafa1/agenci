@@ -1,0 +1,18 @@
+project:
+  name: mcp-agent-example
+
+agent:
+  adapter: mcp
+  mcp_command: python3
+  mcp_args:
+    - server.py
+  mcp_tool: order_status
+  timeout_seconds: 30
+
+tests:
+  directories:
+    - tests
+
+thresholds:
+  success_rate: 0.90
+  security_score: 0.90

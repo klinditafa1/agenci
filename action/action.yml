@@ -1,0 +1,140 @@
+name: "Agenci"
+description: "Run Agenci tests, evaluations, and security checks in CI and fail the workflow on regressions."
+author: "Agenci contributors"
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  config:
+    description: "Path to agenci.yaml"
+    required: false
+    default: "agenci.yaml"
+  command:
+    description: "Which Agenci command to run: test, security, or both"
+    required: false
+    default: "both"
+  python-version:
+    description: "Python version to install Agenci with"
+    required: false
+    default: "3.12"
+  agenci-version:
+    description: "Version of the agenci PyPI package to install (defaults to latest)"
+    required: false
+    default: ""
+  working-directory:
+    description: "Directory containing agenci.yaml"
+    required: false
+    default: "."
+  post-pr-comment:
+    description: "Post/update a summary comment on the pull request (only applies to pull_request events)"
+    required: false
+    default: "true"
+  github-token:
+    description: "Token used to post the PR comment. Needs 'pull-requests: write' permission."
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  status:
+    description: "Overall status: PASS or FAIL"
+    value: ${{ steps.summarize.outputs.status }}
+  report-path:
+    description: "Path to the JSON test report artifact"
+    value: ${{ steps.summarize.outputs.report_path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Agenci
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        if [ -n "${{ inputs.agenci-version }}" ]; then
+          pip install "agenci==${{ inputs.agenci-version }}"
+        else
+          pip install agenci
+        fi
+
+    - name: Run Agenci test
+      id: test
+      if: inputs.command == 'test' || inputs.command == 'both'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set +e
+        agenci test --config "${{ inputs.config }}" --json --output agenci-report.json
+        echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        set -e
+
+    - name: Run Agenci security
+      id: security
+      if: inputs.command == 'security' || inputs.command == 'both'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set +e
+        agenci security --config "${{ inputs.config }}" --json --output agenci-security-report.json
+        echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        set -e
+
+    - name: Summarize
+      id: summarize
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        TEST_EXIT="${{ steps.test.outputs.exit_code }}"
+        SEC_EXIT="${{ steps.security.outputs.exit_code }}"
+        STATUS="PASS"
+        if [ -n "$TEST_EXIT" ] && [ "$TEST_EXIT" != "0" ]; then STATUS="FAIL"; fi
+        if [ -n "$SEC_EXIT" ] && [ "$SEC_EXIT" != "0" ]; then STATUS="FAIL"; fi
+        echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+        echo "report_path=agenci-report.json" >> "$GITHUB_OUTPUT"
+        echo "## Agenci: $STATUS" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: agenci-reports
+        path: |
+          ${{ inputs.working-directory }}/agenci-report.json
+          ${{ inputs.working-directory }}/agenci-security-report.json
+
+    - name: Post PR comment
+      if: |
+        always() &&
+        inputs.post-pr-comment == 'true' &&
+        (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        if [ -f agenci-report.json ]; then
+          REPORT_FILE=agenci-report.json
+        elif [ -f agenci-security-report.json ]; then
+          REPORT_FILE=agenci-security-report.json
+        else
+          echo "No Agenci report found to comment with; skipping."
+          exit 0
+        fi
+
+        ARGS=(--config "${{ inputs.config }}" --report "$REPORT_FILE")
+        if [ -f agenci-security-report.json ] && [ "$REPORT_FILE" != "agenci-security-report.json" ]; then
+          ARGS+=(--security-report agenci-security-report.json)
+        fi
+        agenci pr-comment "${ARGS[@]}"
+
+    - name: Fail workflow on regressions
+      if: steps.summarize.outputs.status == 'FAIL'
+      shell: bash
+      run: |
+        echo "Agenci detected failing tests, evaluations, or security regressions."
+        exit 1

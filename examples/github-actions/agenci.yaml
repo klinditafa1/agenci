@@ -1,0 +1,14 @@
+project:
+  name: github-actions-example
+
+agent:
+  adapter: python
+  entrypoint: agent:run_agent
+
+tests:
+  directories:
+    - tests
+
+thresholds:
+  success_rate: 0.90
+  security_score: 0.90
