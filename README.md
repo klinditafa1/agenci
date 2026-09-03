@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="Agenci Logo.png" alt="Agenci logo" width="400">
+</p>
 # Agenci
 
 **CI/CD, evaluation, and security testing for AI agents.**
