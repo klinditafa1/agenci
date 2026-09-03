@@ -3,7 +3,7 @@
 </p>
 # Agenci
 
-**CI/CD, evaluation, and security testing for AI agents.**
+**CI/CD, evaluation and security testing for AI agents.**
 
 Agenci is GitHub Actions for AI agents: it continuously tests, evaluates,
 benchmarks, security-tests, and regression-tests AI agents and LLM
