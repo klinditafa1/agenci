@@ -140,9 +140,7 @@ end-to-end-verified vs. unit-tested-only for each. The security
 framework covers tool authorization, required tools, a
 data-exfiltration heuristic, and built-in sensitive-data pattern
 scanning — see [docs/security.md](docs/security.md#categories). See
-[docs/architecture.md](docs/architecture.md#roadmap) for what's next
-(**Agenci Cloud**), the future hosted product built on this same
-open-source core.
+[docs/architecture.md](docs/architecture.md#roadmap)
 
 ## Contributing
 
